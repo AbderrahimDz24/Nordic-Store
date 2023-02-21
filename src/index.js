@@ -3,16 +3,9 @@ import BodyParser from "koa-bodyparser";
 import Router from "koa-router";
 import Logger from "koa-logger";
 import serve from "koa-static";
-import * as nodeFetch from "node-fetch";
 import HttpStatus from "http-status";
-import {createApi} from "unsplash-js";
+import {getRandomPhotos} from "./unsplach.js";
 
-let UNSPLASH_ACCESS_KEY = getVarEnv("UNSPLASH_ACCESS_KEY");
-
-const unsplashApi = createApi({
-  accessKey: UNSPLASH_ACCESS_KEY,
-  fetch: nodeFetch.default,
-});
 
 const app = new Koa();
 
@@ -28,7 +21,7 @@ const router = new Router();
 router.get("/api/slides", async (ctx, next) => {
   try {
     ctx.status = HttpStatus.OK;
-    ctx.body = await getRandomPhotos();
+    ctx.body = await getRandomPhotos({count: 3, query: "toys"});
     await next();
   } catch (e) {
     ctx.status = HttpStatus.BAD_GATEWAY;
@@ -36,27 +29,17 @@ router.get("/api/slides", async (ctx, next) => {
       error_message: e.message
     };
   }
-
-  async function getRandomPhotos() {
-    let res = await unsplashApi.photos.getRandom({
-      count: 3,
-      query: "toys",
-      orientation: "landscape"
-    });
-    if (res?.errors?.length) {
-      throw new Error(`Unsplash Api Errors: ${res.errors.join()}`)
-    }
-    return res.response.map((p) => ({
-      description: p.description ?? p.alt_description ?? "",
-      url: p.urls.full,
-    }));
-  }
 });
 
 router.get("/api/products", async (ctx, next) => {
   try {
     ctx.status = HttpStatus.OK;
-    ctx.body = (await getRandomPhotos()).map(p => ({
+    ctx.body = (await getRandomPhotos({
+      count: 8,
+      query: "toys",
+      orientation: "squarish",
+      defaultDescription: "Product Name"
+    })).map(p => ({
       name: p.description,
       price: Math.round((Math.random() * 89 + 10) * 100) / 100,
       picture_url: p.url
@@ -67,21 +50,6 @@ router.get("/api/products", async (ctx, next) => {
     ctx.body = {
       error_message: e.message
     };
-  }
-
-  async function getRandomPhotos() {
-    let res = await unsplashApi.photos.getRandom({
-      count: 8,
-      query: "toys",
-      orientation: "squarish"
-    });
-    if (res?.errors?.length) {
-      throw new Error(`Unsplash Api Errors: ${res.errors.join()}`)
-    }
-    return res.response.map((p) => ({
-      description: p.description ?? p.alt_description ?? "No description found",
-      url: p.urls.full,
-    }));
   }
 });
 
@@ -94,11 +62,3 @@ app.listen(PORT, function () {
     PORT
   );
 });
-
-
-function getVarEnv(name) {
-  if (!process.env[name]) {
-    throw Error(`The var env ${name} is not defined.`);
-  }
-  return process.env[name];
-}
