@@ -53,6 +53,38 @@ router.get("/api/slides", async (ctx, next) => {
   }
 });
 
+router.get("/api/products", async (ctx, next) => {
+  try {
+    ctx.status = HttpStatus.OK;
+    ctx.body = (await getRandomPhotos()).map(p => ({
+      name: p.description,
+      price: Math.round((Math.random() * 89 + 10) * 100) / 100,
+      picture_url: p.url
+    }));
+    await next();
+  } catch (e) {
+    ctx.status = HttpStatus.BAD_GATEWAY;
+    ctx.body = {
+      error_message: e.message
+    };
+  }
+
+  async function getRandomPhotos() {
+    let res = await unsplashApi.photos.getRandom({
+      count: 8,
+      query: "toys",
+      orientation: "squarish"
+    });
+    if (res?.errors?.length) {
+      throw new Error(`Unsplash Api Errors: ${res.errors.join()}`)
+    }
+    return res.response.map((p) => ({
+      description: p.description ?? p.alt_description ?? "No description found",
+      url: p.urls.full,
+    }));
+  }
+});
+
 app.use(router.routes()).use(router.allowedMethods());
 
 app.listen(PORT, function () {
