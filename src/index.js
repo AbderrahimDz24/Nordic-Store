@@ -4,7 +4,7 @@ import Router from "koa-router";
 import Logger from "koa-logger";
 import serve from "koa-static";
 import HttpStatus from "http-status";
-import {getRandomPhotos} from "./unsplach.js";
+import {getRandomPhotos, UnsplashApiError} from "./unsplach.js";
 
 
 const app = new Koa();
@@ -24,10 +24,14 @@ router.get("/api/slides", async (ctx, next) => {
     ctx.body = await getRandomPhotos({count: 3, query: "toys"});
     await next();
   } catch (e) {
-    ctx.status = HttpStatus.BAD_GATEWAY;
-    ctx.body = {
-      error_message: e.message
-    };
+    if (e instanceof UnsplashApiError) {
+      ctx.status = HttpStatus.BAD_GATEWAY;
+      ctx.body = {
+        error_message: e.message
+      };
+    } else {
+      throw e;
+    }
   }
 });
 
@@ -46,10 +50,14 @@ router.get("/api/products", async (ctx, next) => {
     }));
     await next();
   } catch (e) {
-    ctx.status = HttpStatus.BAD_GATEWAY;
-    ctx.body = {
-      error_message: e.message
-    };
+    if (e instanceof UnsplashApiError) {
+      ctx.status = HttpStatus.BAD_GATEWAY;
+      ctx.body = {
+        error_message: e.message
+      };
+    } else {
+      throw e;
+    }
   }
 });
 

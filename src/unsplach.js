@@ -17,10 +17,18 @@ export async function getRandomPhotos({
                                       } = {}) {
   let res = await unsplashApi.photos.getRandom({count, query, orientation});
   if (res?.errors?.length) {
-    throw new Error(`Unsplash Api Errors: ${res.errors.join()}`)
+    throw new UnsplashApiError(res.errors.join());
   }
   return res.response.map((p) => ({
     description: p.description ?? p.alt_description ?? defaultDescription,
     url: p.urls.regular,
   }));
+}
+
+export class UnsplashApiError extends Error {
+  constructor(message) {
+    super();
+    this.name = "UnsplashApiError";
+    this.message = `Unsplash Api Error(s): ${message}`;
+  }
 }
