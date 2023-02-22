@@ -68,6 +68,19 @@
     </style>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+        if (window.Worker) {
+          let dogsWorker = new Worker("dogs.js");
+          dogsWorker.onmessage = function (message) {
+            const urls = message.data;
+            for (let i = 0; i < urls.length; i++) {
+              document.getElementById(`dog-${i + 1}`).src = urls[i];
+            }
+            dogsWorker.terminate();
+          };
+        } else {
+          console.log('Your browser doesn\'t support web workers.');
+        }
+
         fetch("/api/slides")
           .then((response) => response.json())
           .then((slides) => {
@@ -268,6 +281,46 @@
             </nav>
         </div>
 
+    </section>
+
+    <section class="bg-white py-8">
+        <div class="container mx-auto grid grid-cols-2 md:grid-cols-3 gap-1">
+            <div class="h-48 md:h-96 self-stretch grid place-items-center md:row-span-2"
+                 style="background-color: #505630">
+                <img id="dog-1"
+                     class="object-none max-h-48 md:max-h-96"
+                     alt="Dog">
+
+            </div>
+            <div class="h-48 grid place-items-center"
+                 style="background-color: #8A877F">
+                <img id="dog-2" class="object-cover max-h-48"
+                     alt="Dog">
+            </div>
+            <div class="h-48" style="background-color: #617832">
+                <div class="text-white grid place-items-center h-full">
+                    <span class="text-xl self-end">All About Dogs</span>
+                    <span class="self-start font-serif">Lorem ipsem 1</span>
+                </div>
+            </div>
+            <div class="h-48" style="background-color: #8C7853">
+                <div class="text-white grid place-items-center h-full">
+                    <span class="text-xl self-end">Another dog fact</span>
+                    <span class="self-start font-serif">Lorem ipsem 2</span>
+                </div>
+            </div>
+            <div class="h-48 md:h-96 grid place-items-center md:row-span-2"
+                 style="background-color: #8A877F">
+                <img id="dog-3" class="object-cover max-h-48 md:max-h-96"
+                     alt="Dog">
+
+            </div>
+            <div class="h-48 md:col-span-2" style="background-color: #3E332D">
+                <div class="text-white grid place-items-center h-full">
+                    <span class="text-xl self-end">Dogs are furry</span>
+                    <span class="self-start font-serif">Lorem ipsem 2</span>
+                </div>
+            </div>
     </section>
 
     <section class="bg-white py-8">
