@@ -31,17 +31,34 @@ app.use(serve("./public"));
 const router = new Router();
 
 router.get("/", async (ctx, next) => {
-  let slides = await getRandomPhotos({count: 3, query: "toys"});
-  let products = (await getRandomPhotos({
+  let slidesPromise = getRandomPhotos({
+    count: 3,
+    query: "toys"
+  });
+  let productsPromise = getRandomPhotos({
     count: 8,
     query: "toys",
     orientation: "squarish",
     defaultDescription: "Product Name"
-  })).map(p => ({
-    name: p.description,
-    price: Math.round((Math.random() * 89 + 10) * 100) / 100,
-    picture_url: p.url
-  }));
+  })
+  let [slidesResp, productsResp] = await Promise.allSettled([slidesPromise, productsPromise]);
+  let slides = [], products = [];
+
+  if (slidesResp.status === "rejected") {
+    ctx.app.emit('error', new Error(`Fetching slides failed. Reason ${productsResp.reason}`), ctx);
+  } else {
+    slides = slidesResp.value;
+  }
+  if (productsResp.status === "rejected") {
+    ctx.app.emit('error', new Error(`Fetching products failed. Reason ${productsResp.reason}`), ctx);
+  } else {
+    products = productsResp.value.map(p => ({
+      name: p.description,
+      price: Math.round((Math.random() * 89 + 10) * 100) / 100,
+      picture_url: p.url
+    }));
+  }
+
   await ctx.render('index', {
     slides,
     products
