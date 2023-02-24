@@ -32,11 +32,11 @@ const router = new Router();
 
 router.get("/", async (ctx, next) => {
   let slidesPromise = getRandomPhotos({
-    count: 3,
+    count: Date.now() % 4 + 2,
     query: "toys"
   });
   let productsPromise = getRandomPhotos({
-    count: 8,
+    count: Date.now() % 4 + 5,
     query: "toys",
     orientation: "squarish",
     defaultDescription: "Product Name"
